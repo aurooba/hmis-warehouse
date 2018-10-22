@@ -1,7 +1,8 @@
 = simple_form_for @participation_form, url: form_url, as: :form, remote: request.xhr?, html: {multipart: true} do |f|
 
   = f.error_notification
-
+  = link_to(polymorphic_path(participation_path_generator + [:participation_form_signable_documents], client_id: @client.id, participation_form_id: :new), method: :post) do 
+    Collect Patient Signature 
   .col-sm-12
     .row
       .col-sm-6

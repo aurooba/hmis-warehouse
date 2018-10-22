@@ -77,6 +77,13 @@ Rails.application.routes.draw do
           delete :remove_file
           get :download
         end
+        resources :participation_form_signable_documents, only: [:show, :create] do
+          member do
+            # post :remind
+            get :signature
+            get :signed
+          end
+        end
       end
       resources :release_forms do
         member do

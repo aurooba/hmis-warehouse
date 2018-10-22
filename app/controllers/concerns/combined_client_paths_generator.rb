@@ -31,6 +31,11 @@ module CombinedClientPathsGenerator
     end
     helper_method :careplan_path_generator
 
+    def participation_path_generator
+      health_path_generator + [:participation_form]
+    end
+    helper_method :participation_path_generator
+
     def careplan_pilot_path_generator
       health_pilot_path_generator + [:careplan]
     end

@@ -88,7 +88,7 @@ class Rds
     @response = client.create_db_instance(
       db_instance_class: DB_INSTANCE_CLASS,
       db_instance_identifier: identifier,
-      allocated_storage: 20, # 20GB is minimum required
+      allocated_storage: 200, # 20GB is minimum required
       engine: DB_ENGINE,
       master_username: USERNAME,
       master_user_password: PASSWORD,

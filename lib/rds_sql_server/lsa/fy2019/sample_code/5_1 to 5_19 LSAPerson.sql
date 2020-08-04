@@ -225,24 +225,28 @@ Date:  4/7/2020
 			Delete or comment out code between here and the next comment block
 			if not using optional temporary table tlsa_Bednights
 		***********************************************************************/
+drop table if exists #tlsa_bn
+SELECT n.EnrollmentID, bn.DateProvided, hhid.EntryDate, 
+	n.ExitDate, rpt.ReportStart, rpt.ReportEnd, n.CH, n.Active, hhid.HoHID,
+	n.PersonalID, bn.DateDeleted
+into #tlsa_bn
+from tlsa_Enrollment n
+inner join tlsa_HHID hhid on hhid.HouseholdID = n.HouseholdID
+	and hhid.ProjectType = 1 and hhid.TrackingMethod = 3
+inner join hmis_Services bn on (bn.EnrollmentID = n.EnrollmentID or bn.EnrollmentID = hhid.EnrollmentID)
+and bn.RecordType = 200
+inner join lsa_Report rpt on rpt.ReportEnd >= bn.DateProvided
 
-			insert into tlsa_Bednights (
-				EnrollmentID, BedNight)
-			select distinct n.EnrollmentID, bn.DateProvided
-			from tlsa_Enrollment n
-			inner join tlsa_HHID hhid on hhid.HouseholdID = n.HouseholdID
-				and hhid.ProjectType = 1 and hhid.TrackingMethod = 3
-			inner join hmis_Services bn on
-				(bn.EnrollmentID = n.EnrollmentID or bn.EnrollmentID = hhid.EnrollmentID)
-				and bn.RecordType = 200
-				and bn.DateProvided >= hhid.EntryDate
-				and bn.DateProvided >= '10/1/2012'
-				and (bn.DateProvided < n.ExitDate or n.ExitDate is NULL)
-				and bn.DateDeleted is null
-			inner join lsa_Report rpt on rpt.ReportEnd >= bn.DateProvided
-			where n.CH = 1  --bednights for all active HoH/adults for CH
-				or hhid.HoHID = n.PersonalID --bednights for HoH for SystemPath
-				or (n.Active = 1 and bn.DateProvided >= rpt.ReportStart) --bednights for counts in
+insert into tlsa_Bednights(
+	EnrollmentID, BedNight
+)
+select distinct EnrollmentID, DateProvided
+from #tlsa_bn
+where DateProvided >= EntryDate
+	and DateProvided >= '10/1/2012'
+	and (DateProvided < ExitDate or ExitDate is NULL)
+	and DateDeleted is NULL
+	and (CH = 1 or HoHID = PersonalID or (Active = 1 and DateProvided >= ReportStart))
 
 	--ES nbn bed nights
 			insert into ch_Include (PersonalID, ESSHStreetDate, Step)

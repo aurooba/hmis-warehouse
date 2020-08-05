@@ -123,13 +123,13 @@ module ReportGenerators::Lsa::Fy2019
           start_date: '2012-10-01',
           period_type: 3,
           directive: 2,
-          hash_status:1,
+          hash_status: 1,
           include_deleted: false,
         ).
         where("project_ids @> ?", @project_ids.to_json).
         where.not(file: nil)&.first
       if existing_export.present?
-        @hmis_export = existing_export 
+        @hmis_export = existing_export
         return
       end
 
@@ -139,7 +139,7 @@ module ReportGenerators::Lsa::Fy2019
         projects: @project_ids,
         period_type: 3,
         directive: 2,
-        hash_status:1,
+        hash_status: 1,
         include_deleted: false,
         user_id: @report.user_id,
       ).export!

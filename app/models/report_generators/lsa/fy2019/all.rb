@@ -505,6 +505,18 @@ module ReportGenerators::Lsa::Fy2019
         begin
           CREATE INDEX [IX_tlsa_HHID_Active] ON [tlsa_HHID] ([Active]) INCLUDE ([HoHID], [EnrollmentID], [ActiveHHType], [ExitDest])
         end
+        if not exists(select * from sys.indexes where name = 'IX_tlsa_Bednights_EnrollmentID')
+        begin
+          CREATE INDEX [IX_tlsa_Bednights_EnrollmentID] ON [tlsa_Bednights] ([EnrollmentID]) 
+        end
+        if not exists(select * from sys.indexes where name = 'IX_tlsa_Bednights_BedNight')
+        begin
+          CREATE INDEX [IX_tlsa_Bednights_BedNight] ON [tlsa_Bednights] ([BedNight]) 
+        end
+        if not exists(select * from sys.indexes where name = 'IX_ch_Exclude_excludeDate')
+        begin
+          CREATE INDEX [IX_ch_Exclude_excludeDate] ON [ch_Exclude] ([excludeDate]) 
+        end
       SQL
     end
 

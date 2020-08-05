@@ -227,7 +227,7 @@ Date:  4/7/2020
 		***********************************************************************/
 drop table if exists #tlsa_bn
 SELECT n.EnrollmentID, bn.DateProvided, hhid.EntryDate, 
-	n.ExitDate, rpt.ReportStart, rpt.ReportEnd, n.CH, n.Active, hhid.HoHID,
+	n.ExitDate, (select top 1 ReportStart from lsa_Report) as ReportStart, (select top 1 ReportEnd from lsa_Report) as ReportEnd, n.CH, n.Active, hhid.HoHID,
 	n.PersonalID, bn.DateDeleted
 into #tlsa_bn
 from tlsa_Enrollment n
@@ -235,7 +235,6 @@ inner join tlsa_HHID hhid on hhid.HouseholdID = n.HouseholdID
 	and hhid.ProjectType = 1 and hhid.TrackingMethod = 3
 inner join hmis_Services bn on (bn.EnrollmentID = n.EnrollmentID or bn.EnrollmentID = hhid.EnrollmentID)
 and bn.RecordType = 200
-inner join lsa_Report rpt on rpt.ReportEnd >= bn.DateProvided
 
 insert into tlsa_Bednights(
 	EnrollmentID, BedNight
@@ -244,6 +243,7 @@ select distinct EnrollmentID, DateProvided
 from #tlsa_bn
 where DateProvided >= EntryDate
 	and DateProvided >= '10/1/2012'
+	and DateProvided <= ReportEnd
 	and (DateProvided < ExitDate or ExitDate is NULL)
 	and DateDeleted is NULL
 	and (CH = 1 or HoHID = PersonalID or (Active = 1 and DateProvided >= ReportStart))

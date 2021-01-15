@@ -2,8 +2,10 @@ require 'English'
 require 'amazing_print'
 require 'yaml'
 require_relative 'ecs_tools'
+require_relative 'memory_analyzer'
 require 'aws-sdk-cloudwatchlogs'
 require 'aws-sdk-ec2'
+require_relative '../../../../app/jobs/workoff_arbiter'
 
 class RollOut
   attr_accessor :aws_profile
@@ -40,6 +42,8 @@ class RollOut
   DEFAULT_CPU_SHARES = 256
 
   NOT_SPOT = 'not-spot'
+
+  SPOT_CAPACITY_PROVIDER_NAME = WorkoffArbiter::SPOT_CAPACITY_PROVIDER_NAME
 
   def initialize(image_base:, target_group_name:, target_group_arn:, secrets_arn:, execution_role:, task_role:, dj_options: nil, web_options:, fqdn:)
     self.aws_profile         = ENV.fetch('AWS_PROFILE')
@@ -115,6 +119,8 @@ class RollOut
 
     mark_spot_instances!
 
+    register_workoff_worker!
+
     run_deploy_tasks!
 
     deploy_web!
@@ -173,6 +179,10 @@ class RollOut
   #
   # So we need this code to mark all the ECS instances as EC2-spot-instance backed.
   #
+  # FIXME: Much later, I've learned you can set this in the cloudinit user
+  # data, so if we have a launch template for spots and one for non-spots, we
+  # can do it there.
+  #
   def mark_spot_instances!
     # Get all the ECS container instances
     container_instance_arns = ecs.list_container_instances(
@@ -207,7 +217,7 @@ class RollOut
           puts "[INFO] Making attribute for #{instance.instance_id} as instance_lifecycle=#{spotness}"
 
           # Finally, upsert the attribute
-          resp = ecs.put_attributes({
+          ecs.put_attributes({
             cluster: cluster,
             attributes: [
               {
@@ -233,6 +243,19 @@ class RollOut
       task_role: nil,
       web_options: {},
     ).mark_spot_instances!
+  end
+
+  def register_workoff_worker!
+    name = target_group_name + '-workoff'
+
+    _register_task!(
+      soft_mem_limit_mb: DEFAULT_SOFT_RAM_MB,
+      image: image_base + '--dj',
+      name: name,
+      command: ['rake', 'jobs:workoff'],
+    )
+
+    self.default_environment << { name: 'WORKOFF_TASK_DEFINITION', value: self.task_definition }
   end
 
   def web_soft_mem_limit_mb
@@ -359,13 +382,22 @@ class RollOut
 
     ten_minutes = 10 * 60
 
+    hard_mem_limit_mb = (soft_mem_limit_mb * memory_multiplier).to_i
+
+    ma = MemoryAnalyzer.new
+    ma.cluster_name         = self.cluster
+    ma.task_definition_name = name
+    ma.scheduled_hard_limit = hard_mem_limit_mb
+    ma.scheduled_soft_limit = soft_mem_limit_mb
+    ma.run!
+
     container_definition = {
       name: name,
       image: image,
       cpu: cpu_shares,
 
       # Hard limit
-      memory: (soft_mem_limit_mb * memory_multiplier).to_i,
+      memory: hard_mem_limit_mb,
 
       # Soft limit
       memory_reservation: soft_mem_limit_mb,
@@ -394,27 +426,6 @@ class RollOut
       container_definition[:command] = command
     end
 
-    # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html
-    placement_constraints = []
-
-    # distinct Instance is problematic if you have limited resources or a desired count of 1
-    # placement_contraints << { type: 'distinctInstance' },
-
-    # only web and staging containers can live on spot instances
-    # all others are flagged as non-spot
-    if name.match?(/web/)
-      puts "[INFO][CONST] Not constraining #{name}"
-    elsif name.match?(/staging/)
-      puts "[INFO][CONST] Not constraining #{name}"
-    else
-      puts "[INFO][CONST] Constraining #{name} to non-spot-instances"
-
-      placement_constraints << {
-        type: 'memberOf',
-        expression: "attribute:instance-lifecycle == #{NOT_SPOT}",
-      }
-    end
-
     task_definition_payload = {
       container_definitions: [container_definition],
 
@@ -423,7 +434,7 @@ class RollOut
       # This is the role that the ECS agent and Docker daemon can assume
       execution_role_arn: execution_role,
 
-      placement_constraints: placement_constraints,
+      placement_constraints: _placement_constraints(name),
     }
 
     # This is the role that the service/task can assume
@@ -432,6 +443,75 @@ class RollOut
     results = ecs.register_task_definition(task_definition_payload)
 
     self.task_definition = results.to_h.dig(:task_definition, :task_definition_arn)
+  end
+
+  # Abstraction that lets the cluster provision more/less EC2 instances based
+  # on the requirements of the containers we want to run
+  def _capacity_providers
+    @_capacity_providers ||= ecs.describe_clusters(clusters: [self.cluster]).clusters.first.capacity_providers
+  end
+
+  # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html
+  def _placement_constraints(name)
+    [].tap do |pc|
+      # Distinct Instance is problematic if you have limited resources.
+      # pc << { type: 'distinctInstance' }
+      # puts "[INFO][CONST] constraining #{name} to distinct EC2 instances"
+
+      # Only delayed job daemons need to be on non-spot
+      if name.match?(/-dj-/)
+        puts "[INFO][CONST] Constraining #{name} to non-spot-instances (on-demand)"
+
+        pc << {
+          type: 'memberOf',
+          expression: "attribute:instance-lifecycle == #{NOT_SPOT}",
+        }
+      end
+
+      # In the interim before switching everything over to capacity providers, we only allow workoff workers
+      # to use capacity providers.
+      # FIXME: Eventually, we will remove this if-statement and replace with
+      # running DJ services with the on-demand, non-default capacity provider
+      # strategy. We need
+      #   1) for our RIs to expire
+      #   2) make the spot instance capacity provider the default one
+      #   3) redeploy everything
+      #   4) spin down the (at this point) defunct auto-scaling group to no instances
+
+      if !name.match?(/workoff/)
+        puts "[INFO][CONST] Not constraining #{name} based on spot/non-spot"
+        pc << {
+          type: 'memberOf',
+          expression: "attribute:capacity-provider.name != on-demand-capacity-provider",
+        }
+        pc << {
+          type: 'memberOf',
+          expression: "attribute:capacity-provider.name != spot-capacity-provider",
+        }
+      end
+    end
+  end
+
+  # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-strategies.html
+  def _placement_strategy
+    [
+      {
+        # distribute across zones first
+        "field": "attribute:ecs.availability-zone",
+        "type": "spread"
+      },
+      {
+        # Then try to maximize utilization (minimize number of EC2 instances)
+        "field": "memory",
+        "type": "binpack"
+      },
+      {
+        # Tie-breaker is to put tasks on difference instances, but I don't know
+        # if we ever would get to this choice
+        "field": "instanceId",
+        "type": "spread"
+      }
+    ]
   end
 
   def _run_task!
@@ -443,11 +523,26 @@ class RollOut
 
     incomplete = true
 
+    run_task_payload = {
+      cluster: cluster,
+      task_definition: task_definition,
+    }
+
+    if _capacity_providers.length > 0 && _capacity_providers.includes?(SPOT_CAPACITY_PROVIDER_NAME)
+      puts "[INFO] Using spot capacity provider"
+      run_task_payload[:capacity_provider_strategy] = [
+        {
+          capacity_provider: SPOT_CAPACITY_PROVIDER_NAME,
+          weight: 1,
+          base: 1,
+        },
+      ]
+    else
+      puts "[ERROR] No dynamic work capacity provider found. Just running the task."
+    end
+
     while (incomplete) do
-      results = ecs.run_task(
-        cluster: cluster,
-        task_definition: task_definition
-      )
+      results = ecs.run_task(run_task_payload)
 
       if results.failures.length > 0
         # FIXME: we can look up the ec2 instance name container instance -> ec2 instance -> tags -> name tag
@@ -625,22 +720,6 @@ class RollOut
 
     five_minutes = 5 * 60
 
-    # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-strategies.html
-    placement_strategy = [
-      {
-        "field": "attribute:ecs.availability-zone",
-        "type": "spread"
-      },
-      {
-        "field": "instanceId",
-        "type": "spread"
-      },
-      {
-        "type": "random"
-      },
-
-    ]
-
     if service_exists
       puts "[INFO] Updating #{name} to #{task_definition.split(/:/).last}: #{desired_count} containers"
       payload = {
@@ -649,7 +728,7 @@ class RollOut
         desired_count: desired_count,
         task_definition: task_definition,
         # placement_constraints: placement_constraints,
-        placement_strategy: placement_strategy,
+        placement_strategy: _placement_strategy,
         deployment_configuration: {
           maximum_percent: maximum_percent,
           minimum_healthy_percent: minimum_healthy_percent,
@@ -674,7 +753,7 @@ class RollOut
         },
         launch_type: 'EC2',
         # placement_constraints: placement_constraints,
-        placement_strategy: placement_strategy,
+        placement_strategy: _placement_strategy,
         load_balancers: load_balancers,
       }
 

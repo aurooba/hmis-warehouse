@@ -198,10 +198,18 @@ module HmisCsvTwentyTwenty::Loader
       return unless copy_cols
 
       col_list = copy_cols.map { |c| klass.connection.quote_column_name c }.join(',')
+
+      # TODO:
+      # FORCE_NULL for columns where empty string makes no sense. e.g. non text
+      # data types and potentially all columns. This is needed since we could
+      # see blank text data as either a fully blank field like ',,' or as a
+      # quoted blank string like '""'
+      # TODO: ensure that postgres and rails agree that
+      # the timezoen for incoming data is config.active_record.default_timezone = :utc
       copy_sql = <<~SQL.strip
         COPY #{klass.quoted_table_name} (#{col_list})
         FROM STDIN
-        WITH (FORMAT csv,HEADER,QUOTE '"',DELIMITER ',', NULL '')
+        WITH (ENCODING UTF8,FORMAT csv,HEADER,QUOTE '"',DELIMITER ',',NULL '')
       SQL
       # logger.debug { "   #{copy_sql}" }
 
@@ -209,6 +217,9 @@ module HmisCsvTwentyTwenty::Loader
       # SLOW_CHECK; klass.connection.transaction do
       bm = Benchmark.measure do
         pg_conn = klass.connection.raw_connection
+        pg_conn.execute 'BEGIN TRANSACTION'
+        pg_conn.execute "  SET LOCAL datestyle='ISO'"
+        pg_conn.execute "  SET LOCAL intervalstyle='iso_8601'"
         pg_result = pg_conn.copy_data copy_sql do
           read_from.rewind
           CSV.parse(read_from, headers: false, liberal_parsing: true) do |row|
@@ -224,6 +235,7 @@ module HmisCsvTwentyTwenty::Loader
           end
         end
         lines_loaded = pg_result.cmd_tuples
+        pg_conn.execute 'COMMIT'
       end
       # SLOW_CHECK; end
 

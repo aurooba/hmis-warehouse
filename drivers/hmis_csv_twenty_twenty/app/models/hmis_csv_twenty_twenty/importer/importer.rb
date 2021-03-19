@@ -131,37 +131,35 @@ module HmisCsvTwentyTwenty::Importer
       pre_processed_at = Time.current
       bm = Benchmark.measure do
         batch = []
-        failures = []
-        row_failures = []
+        # failures = []
         scope.find_each(batch_size: SELECT_BATCH_SIZE) do |source|
-          row_failures = []
-
           # Avoiding newing up a AR model here is faster
-          # run_row_validations and process_batch are both fine
-          # to with with the raw source.hmis_data as a ActiveSupport::HashWithIndifferentAccess
           destination = klass.attrs_from(source, deidentified: @deidentified)
           destination['importer_log_id'] = importer_log_id
           destination['pre_processed_at'] = pre_processed_at
 
-          # FIXME: are we sure this source_hash algo matches
-          # existing import logic. If not all records will be considered modified on the next run
+          # # FIXME: are we sure this source_hash algo matches
+          # # existing import logic. If not all records will be considered modified on the next run
           destination['source_hash'] = klass.new(destination).calculate_source_hash
+          # destination['source_hash'] = 'FIXME'
+          # row_failures = run_row_validations(klass, destination, file_name, importer_log)
+          # failures.concat row_failures
 
-          row_failures = run_row_validations(klass, destination, file_name, importer_log)
-          failures.concat row_failures.compact
-          # Don't insert any where we have actual errors
-          batch << destination unless validation_failures_contain_errors?(row_failures)
+          # # Don't insert any where we have actual errors
+          batch << destination # unless validation_failures_contain_errors?(row_failures)
+
           if batch.count == INSERT_BATCH_SIZE
             process_batch!(klass, batch, file_name, type: 'pre_processed', upsert: klass.upsert?)
             batch = []
           end
-          if failures.count == INSERT_BATCH_SIZE
-            HmisCsvValidation::Base.import(failures, validate: use_ar_model_validations)
-            failures = []
-          end
+
+          # if failures.count == INSERT_BATCH_SIZE
+          #   failures = []
+          # end
         end
         process_batch!(klass, batch, file_name, type: 'pre_processed', upsert: klass.upsert?) if batch.present? # ensure we get the last batch
-        HmisCsvValidation::Base.import(failures, validate: use_ar_model_validations) if failures.present?
+
+        run_batch_validations(klass.where(importer_log_id: importer_log_id), file_name)
       end
       records = scope.count
       stats = {
@@ -175,14 +173,26 @@ module HmisCsvTwentyTwenty::Importer
       end
     end
 
+    private def row_validators(klass)
+      @row_validators ||= {}
+      @row_validators[klass] = klass.hmis_validations.map do |column, _checks|
+        # check_functions = checks.map do |check|
+        #   arguments = check.dig(:arguments)
+        #   -> (row, column) {
+        #     logger.debug { "#{check[:class]}.check_validity!(#{klass}, #{column}, #{arguments})" }
+        #     check[:class].check_validity!(row, column, arguments)
+        #   }
+        # end
+
+        [column, []]
+      end.to_h.freeze
+    end
+
     private def run_row_validations(klass, row, filename, importer_log)
       failures = []
-      klass.hmis_validations.each do |column, checks|
-        next unless checks.present?
-
-        checks.each do |check|
-          arguments = check.dig(:arguments)
-          failures << check[:class].check_validity!(row, column, arguments)
+      row_validators(klass).each do |column, checks|
+        checks.each do |check_function|
+          failures << check_function.call(row, column)
         end
       end
       failures.compact!
@@ -191,6 +201,25 @@ module HmisCsvTwentyTwenty::Importer
         importer_log.summary[filename]['total_flags'] += failures.count
       end
       failures
+    end
+
+    private def run_batch_validations(scope, filename)
+      # scope.hmis_validations.map do |column, checks|
+      #   n_failures = 0
+      #   checks.each do |check|
+      #     failures = check[:class].check_scope(scope, column, check.dig(:arguments))
+
+      #     failures.partition(&:skip_row?)
+
+      #     HmisCsvValidation::Base.import(failures, validate: false) if failures.any?
+
+      #     n_failures = failures.size
+      #   end
+      #   if n_failures.positive?
+      #     importer_log.summary[filename]['total_flags'] ||= 0
+      #     importer_log.summary[filename]['total_flags'] += n_failures
+      #   end
+      # end
     end
 
     private def validation_failures_contain_errors?(failures)
@@ -230,6 +259,9 @@ module HmisCsvTwentyTwenty::Importer
 
     def validate_data_set!
       importable_files.each do |filename, klass|
+        failures = klass.run_complex_validations!(importer_log, filename)
+        HmisCsvValidation::Base.import(failures) if failures.any?
+
         failures = klass.run_complex_validations!(importer_log, filename)
         HmisCsvValidation::Base.import(failures) if failures.any?
       end
@@ -593,19 +625,22 @@ module HmisCsvTwentyTwenty::Importer
     end
 
     private def process_batch!(klass, batch, file_name, type:, upsert:, columns: klass.upsert_column_names(version: '2020')) # rubocop:disable Metrics/ParameterLists
-      klass.logger.debug { "process_batch! #{klass} #{upsert ? 'upsert' : 'import'} #{batch.size} records" }
-      klass.logger.silence(Logger::WARN) do
-        if upsert
-          klass.import(batch, on_duplicate_key_update:
-            {
-              conflict_target: klass.conflict_target,
-              columns: columns,
-            }, validate: use_ar_model_validations)
-        else
-          klass.import(batch, validate: use_ar_model_validations)
+      bm = Benchmark.measure do
+        klass.logger.debug { "process_batch! #{klass} #{upsert ? 'upsert' : 'import'} #{batch.size} records" }
+        klass.logger.silence(Logger::WARN) do
+          if upsert
+            klass.import(batch, on_duplicate_key_update:
+              {
+                conflict_target: klass.conflict_target,
+                columns: columns,
+              }, validate: use_ar_model_validations)
+          else
+            klass.import(batch, validate: use_ar_model_validations)
+          end
+          note_processed(file_name, batch.count, type)
         end
-        note_processed(file_name, batch.count, type)
       end
+      klass.logger.debug { " ... done #{bm}" }
       return nil
     rescue ActiveRecord::ActiveRecordError, PG::Error => e
       log "batch failed: #{e.message}... processing records one at a time"
@@ -632,7 +667,9 @@ module HmisCsvTwentyTwenty::Importer
     end
 
     private def export_record
-      @export_record ||= HmisCsvTwentyTwenty::Importer::Export.find_by(importer_log_id: importer_log.id)
+      @export_record ||= HmisCsvTwentyTwenty::Importer::Export.find_by!(
+        importer_log_id: importer_log.id,
+      )
     end
 
     # If we exported this from HMIS more recently than previous data (compared at day granularity)

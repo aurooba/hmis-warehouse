@@ -21,10 +21,6 @@ module HmisCsvTwentyTwenty::Loader
     include TsqlImport
     include NotifierConfig
     include HmisTwentyTwenty
-    # The HMIS spec limits the field to 50 characters
-    # EXPORT_ID_FIELD_WIDTH = 50
-    # SELECT_BATCH_SIZE = 10_000
-    # INSERT_BATCH_SIZE = 5_000
 
     attr_accessor :logger, :notifier_config, :import, :range, :data_source, :loader_log
 

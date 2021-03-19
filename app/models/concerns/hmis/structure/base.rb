@@ -139,12 +139,10 @@ module HMIS::Structure::Base
       end
     end
 
-    def hmis_structure(version: nil)
-      hmis_configuration(version: version).transform_values { |v| v.select { |k| k.in?(hmis_structure_keys) } }
-    end
+    HMIS_STRUCTURE_KEYS = [:type, :limit, :null].freeze
 
-    def hmis_structure_keys
-      [:type, :limit, :null]
+    def hmis_structure(version: nil)
+      hmis_configuration(version: version).transform_values { |v| v.select { |k| k.in?(HMIS_STRUCTURE_KEYS) } }
     end
   end
 end

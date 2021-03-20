@@ -138,10 +138,9 @@ module HmisCsvTwentyTwenty::Importer
           destination['importer_log_id'] = importer_log_id
           destination['pre_processed_at'] = pre_processed_at
 
-          # # FIXME: are we sure this source_hash algo matches
-          # # existing import logic. If not all records will be considered modified on the next run
-          destination['source_hash'] = klass.new(destination).calculate_source_hash
-          # destination['source_hash'] = 'FIXME'
+          # source_sha256 is now a generated column in the database
+          # destination['source_hash'] =  klass.new(destination).calculate_source_hash
+
           # row_failures = run_row_validations(klass, destination, file_name, importer_log)
           # failures.concat row_failures
 

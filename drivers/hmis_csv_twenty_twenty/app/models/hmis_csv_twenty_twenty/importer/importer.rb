@@ -134,25 +134,25 @@ module HmisCsvTwentyTwenty::Importer
       bm = Benchmark.measure do
         batch = []
         failures = []
-        row_failures = []
         scope.find_each(batch_size: SELECT_BATCH_SIZE) do |source|
-          row_failures = []
-
           # Avoiding newing up a AR model here is faster
-          # run_row_validations and process_batch are both fine
-          # to with with the raw source.hmis_data as a ActiveSupport::HashWithIndifferentAccess
           destination = klass.attrs_from(source, deidentified: @deidentified)
           destination['importer_log_id'] = importer_log_id
           destination['pre_processed_at'] = pre_processed_at
 
-          # FIXME: are we sure this source_hash algo matches
-          # existing import logic. If not all records will be considered modified on the next run
+          # We are moving to source_sha256 which is generated column in the database for
+          # performance reasons. Migrating large existing databases will take
+          # some time so for now we continue to support the old method.
+          # The plan is add detection for the new column and disable this next
+          # (expensive) line in deployments that have it
           destination['source_hash'] = klass.new(destination).calculate_source_hash
 
           row_failures = run_row_validations(klass, destination, file_name, importer_log)
           failures.concat row_failures.compact
+
           # Don't insert any where we have actual errors
           batch << destination unless validation_failures_contain_errors?(row_failures)
+
           if batch.count == INSERT_BATCH_SIZE
             process_batch!(klass, batch, file_name, type: 'pre_processed', upsert: klass.upsert?)
             batch = []
@@ -164,6 +164,8 @@ module HmisCsvTwentyTwenty::Importer
         end
         process_batch!(klass, batch, file_name, type: 'pre_processed', upsert: klass.upsert?) if batch.present? # ensure we get the last batch
         HmisCsvValidation::Base.import(failures, validate: use_ar_model_validations) if failures.present?
+
+        # run_batch_validations(klass.where(importer_log_id: importer_log_id), file_name)
       end
       records = scope.count
       stats = {
@@ -194,6 +196,27 @@ module HmisCsvTwentyTwenty::Importer
       end
       failures
     end
+
+    # we had the idea that batching the checks would be faster
+    # so far its not true.
+    # private def run_batch_validations(scope, filename)
+    #   scope.hmis_validations.map do |column, checks|
+    #     n_failures = 0
+    #     checks.each do |check|
+    #       failures = check[:class].check_scope(scope, column, check.dig(:arguments))
+
+    #       failures.partition(&:skip_row?)
+
+    #       HmisCsvValidation::Base.import(failures, validate: false) if failures.any?
+
+    #       n_failures = failures.size
+    #     end
+    #     if n_failures.positive?
+    #       importer_log.summary[filename]['total_flags'] ||= 0
+    #       importer_log.summary[filename]['total_flags'] += n_failures
+    #     end
+    #   end
+    # end
 
     private def validation_failures_contain_errors?(failures)
       failures.any?(&:skip_row?)

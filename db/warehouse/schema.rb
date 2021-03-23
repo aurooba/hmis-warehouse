@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_03_12_200044) do
+ActiveRecord::Schema.define(version: 2021_03_19_192233) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
@@ -31,6 +31,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "data_source_id"
     t.string "source_hash"
     t.datetime "pending_date_deleted"
+    t.binary "source_sha256"
     t.index ["AffiliationID", "data_source_id"], name: "index_Affiliation_on_AffiliationID_and_data_source_id", unique: true
     t.index ["DateCreated"], name: "affiliation_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "index_Affiliation_on_DateDeleted_and_data_source_id"
@@ -57,6 +58,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "data_source_id"
     t.datetime "pending_date_deleted"
     t.string "source_hash"
+    t.binary "source_sha256"
     t.index ["AssessmentID", "data_source_id"], name: "index_Assessment_on_AssessmentID_and_data_source_id", unique: true
     t.index ["PersonalID", "EnrollmentID", "data_source_id", "AssessmentID"], name: "assessment_p_id_en_id_ds_id_a_id"
     t.index ["pending_date_deleted"], name: "index_Assessment_on_pending_date_deleted"
@@ -79,6 +81,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "data_source_id"
     t.datetime "pending_date_deleted"
     t.string "source_hash"
+    t.binary "source_sha256"
     t.index ["AssessmentID", "data_source_id", "PersonalID", "EnrollmentID", "AssessmentQuestionID"], name: "assessment_q_a_id_ds_id_p_id_en_id_aq_id"
     t.index ["AssessmentQuestionID", "data_source_id"], name: "aq_aq_id_ds_id", unique: true
     t.index ["pending_date_deleted"], name: "index_AssessmentQuestions_on_pending_date_deleted"
@@ -99,6 +102,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "data_source_id"
     t.datetime "pending_date_deleted"
     t.string "source_hash"
+    t.binary "source_sha256"
     t.index ["AssessmentID", "data_source_id", "PersonalID", "EnrollmentID", "AssessmentResultID"], name: "assessment_r_a_id_ds_id_p_id_en_id_ar_id"
     t.index ["AssessmentResultID", "data_source_id"], name: "ar_ar_id_ds_id", unique: true
     t.index ["pending_date_deleted"], name: "index_AssessmentResults_on_pending_date_deleted"
@@ -371,6 +375,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "data_source_id"
     t.datetime "pending_date_deleted"
     t.string "source_hash"
+    t.binary "source_sha256"
     t.index ["CurrentLivingSitID", "data_source_id"], name: "cur_liv_sit_cur_id_ds_id"
     t.index ["CurrentLivingSitID", "data_source_id"], name: "cur_liv_sit_sit_id_ds_id", unique: true
     t.index ["PersonalID", "EnrollmentID", "data_source_id", "CurrentLivingSitID"], name: "cur_liv_sit_p_id_en_id_ds_id_cur_id"
@@ -404,6 +409,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "data_source_id"
     t.string "source_hash"
     t.datetime "pending_date_deleted"
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "disabilities_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "Disabilities_DateDeleted_data_source_id_idx", where: "(\"DateDeleted\" IS NULL)"
     t.index ["DateDeleted", "data_source_id"], name: "Disabilities_DateDeleted_data_source_id_idx1", where: "(\"DateDeleted\" IS NULL)"
@@ -439,6 +445,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "data_source_id"
     t.string "source_hash"
     t.datetime "pending_date_deleted"
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "employment_education_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "index_EmploymentEducation_on_DateDeleted_and_data_source_id"
     t.index ["DateUpdated"], name: "employment_education_date_updated"
@@ -572,6 +579,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.date "history_generated_on"
     t.string "original_household_id"
     t.bigint "service_history_processing_job_id"
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "enrollment_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "index_Enrollment_on_DateDeleted_and_data_source_id"
     t.index ["DateDeleted"], name: "index_Enrollment_on_DateDeleted"
@@ -607,6 +615,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.string "HouseholdID", limit: 32
     t.string "source_hash"
     t.datetime "pending_date_deleted"
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "enrollment_coc_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "index_EnrollmentCoC_on_DateDeleted_and_data_source_id"
     t.index ["DateUpdated"], name: "enrollment_coc_date_updated"
@@ -637,6 +646,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "data_source_id"
     t.datetime "pending_date_deleted"
     t.string "source_hash"
+    t.binary "source_sha256"
     t.index ["EventID", "data_source_id"], name: "ev_ev_id_ds_id", unique: true
     t.index ["data_source_id", "PersonalID", "EnrollmentID", "EventID"], name: "event_ds_id_p_id_en_id_ev_id"
     t.index ["pending_date_deleted"], name: "index_Event_on_pending_date_deleted"
@@ -702,6 +712,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "CMExitReason"
     t.string "source_hash"
     t.datetime "pending_date_deleted"
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "exit_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "index_Exit_on_DateDeleted_and_data_source_id"
     t.index ["DateDeleted"], name: "index_Exit_on_DateDeleted"
@@ -758,6 +769,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.string "source_hash"
     t.datetime "pending_date_deleted"
     t.string "OtherFunder"
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "funder_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "index_Funder_on_DateDeleted_and_data_source_id"
     t.index ["DateUpdated"], name: "funder_date_updated"
@@ -824,6 +836,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "data_source_id"
     t.string "source_hash"
     t.datetime "pending_date_deleted"
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "health_and_dv_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "index_HealthAndDV_on_DateDeleted_and_data_source_id"
     t.index ["DateUpdated"], name: "health_and_dv_date_updated"
@@ -919,6 +932,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "ConnectionWithSOAR"
     t.string "source_hash"
     t.datetime "pending_date_deleted"
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "income_benefits_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "IncomeBenefits_DateDeleted_data_source_id_idx", where: "(\"DateDeleted\" IS NULL)"
     t.index ["DateDeleted", "data_source_id"], name: "index_IncomeBenefits_on_DateDeleted_and_data_source_id"
@@ -971,6 +985,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.string "coc_code_override"
     t.date "inventory_start_date_override"
     t.date "inventory_end_date_override"
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "inventory_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "index_Inventory_on_DateDeleted_and_data_source_id"
     t.index ["DateUpdated"], name: "inventory_date_updated"
@@ -995,6 +1010,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.string "source_hash"
     t.datetime "pending_date_deleted"
     t.integer "VictimServicesProvider"
+    t.binary "source_sha256"
     t.index ["DateDeleted", "data_source_id"], name: "index_Organization_on_DateDeleted_and_data_source_id"
     t.index ["ExportID"], name: "organization_export_id"
     t.index ["data_source_id", "OrganizationID"], name: "unk_Organization", unique: true
@@ -1042,6 +1058,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "target_population_override"
     t.integer "tracking_method_override"
     t.date "operating_end_date_override"
+    t.binary "source_sha256"
     t.index "COALESCE(act_as_project_type, \"ProjectType\")", name: "project_project_override_index"
     t.index ["DateCreated"], name: "project_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "index_Project_on_DateDeleted_and_data_source_id"
@@ -1078,6 +1095,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "geography_type_override"
     t.string "geocode_override", limit: 6
     t.string "zip_override"
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "project_coc_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "index_ProjectCoC_on_DateDeleted_and_data_source_id"
     t.index ["DateUpdated"], name: "project_coc_date_updated"
@@ -1107,6 +1125,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "data_source_id"
     t.string "source_hash"
     t.datetime "pending_date_deleted"
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "services_date_created"
     t.index ["DateDeleted", "data_source_id"], name: "index_Services_on_DateDeleted_and_data_source_id"
     t.index ["DateDeleted"], name: "index_Services_on_DateDeleted"
@@ -1135,6 +1154,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.integer "data_source_id"
     t.datetime "pending_date_deleted"
     t.string "source_hash"
+    t.binary "source_sha256"
     t.index ["UserID", "data_source_id"], name: "index_User_on_UserID_and_data_source_id", unique: true
     t.index ["pending_date_deleted"], name: "index_User_on_pending_date_deleted"
   end
@@ -2360,6 +2380,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["AffiliationID", "data_source_id"], name: "hmis_2020_affiliations-lZaj"
     t.index ["ExportID"], name: "hmis_2020_affiliations-qycr"
     t.index ["importer_log_id", "DateUpdated"], name: "idx_hmis_2020_affiliations_imid_du"
@@ -2557,6 +2578,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["AssessmentID"], name: "hmis_2020_assessment_questions-fD1j"
     t.index ["AssessmentQuestionID", "data_source_id"], name: "hmis_2020_assessment_questions-0oMf"
     t.index ["ExportID"], name: "hmis_2020_assessment_questions-sDob"
@@ -2585,6 +2607,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["AssessmentID"], name: "hmis_2020_assessment_results-AnQd"
     t.index ["AssessmentResultID", "data_source_id"], name: "hmis_2020_assessment_results-rawc"
     t.index ["ExportID"], name: "hmis_2020_assessment_results-2kxY"
@@ -2615,6 +2638,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["AssessmentDate"], name: "hmis_2020_assessments-YW8L"
     t.index ["AssessmentID", "data_source_id"], name: "hmis_2020_assessments-3sM0"
     t.index ["AssessmentID"], name: "hmis_2020_assessments-kqMe"
@@ -2671,6 +2695,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["DOB"], name: "hmis_2020_clients-qUjP"
     t.index ["DateCreated"], name: "hmis_2020_clients-rrgI"
     t.index ["DateUpdated"], name: "hmis_2020_clients-jdcP"
@@ -2711,6 +2736,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["CurrentLivingSitID", "data_source_id"], name: "hmis_2020_current_living_situations-cLpS"
     t.index ["CurrentLivingSitID"], name: "hmis_2020_current_living_situations-DXZ0"
     t.index ["CurrentLivingSituation"], name: "hmis_2020_current_living_situations-WmJZ"
@@ -2751,6 +2777,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "hmis_2020_disabilities-p0j2"
     t.index ["DateUpdated"], name: "hmis_2020_disabilities-oxMH"
     t.index ["DisabilitiesID", "data_source_id"], name: "hmis_2020_disabilities-DA3C"
@@ -2787,6 +2814,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "hmis_2020_employment_educations-oPbl"
     t.index ["DateUpdated"], name: "hmis_2020_employment_educations-rTDS"
     t.index ["EmploymentEducationID", "data_source_id"], name: "hmis_2020_employment_educations-zM3A"
@@ -2821,6 +2849,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["CoCCode"], name: "hmis_2020_enrollment_cocs-5ROz"
     t.index ["DateCreated"], name: "hmis_2020_enrollment_cocs-zikd"
     t.index ["DateDeleted"], name: "hmis_2020_enrollment_cocs-GUQA"
@@ -2915,6 +2944,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "hmis_2020_enrollments-ZK9t"
     t.index ["DateDeleted"], name: "hmis_2020_enrollments-WHri"
     t.index ["DateUpdated"], name: "hmis_2020_enrollments-hQVn"
@@ -2962,6 +2992,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["EnrollmentID"], name: "hmis_2020_events-ej4z"
     t.index ["EventDate"], name: "hmis_2020_events-SY9T"
     t.index ["EventID", "data_source_id"], name: "hmis_2020_events-5Ulw"
@@ -3025,6 +3056,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "hmis_2020_exits-F305"
     t.index ["DateDeleted"], name: "hmis_2020_exits-s54g"
     t.index ["DateUpdated"], name: "hmis_2020_exits-Crsu"
@@ -3065,6 +3097,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["ExportID", "data_source_id"], name: "hmis_2020_exports-YcvP"
     t.index ["ExportID"], name: "hmis_2020_exports-awLV"
     t.index ["importer_log_id"], name: "index_hmis_2020_exports_on_importer_log_id"
@@ -3093,6 +3126,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "hmis_2020_funders-CQE4"
     t.index ["DateUpdated"], name: "hmis_2020_funders-yKF3"
     t.index ["ExportID"], name: "hmis_2020_funders-qRxb"
@@ -3130,6 +3164,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "hmis_2020_health_and_dvs-85bD"
     t.index ["DateUpdated"], name: "hmis_2020_health_and_dvs-TUTe"
     t.index ["EnrollmentID"], name: "hmis_2020_health_and_dvs-SbP4"
@@ -3228,6 +3263,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "hmis_2020_income_benefits-JwPq"
     t.index ["DateUpdated"], name: "hmis_2020_income_benefits-aphJ"
     t.index ["EnrollmentID"], name: "hmis_2020_income_benefits-AUwp"
@@ -3271,6 +3307,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "hmis_2020_inventories-J6na"
     t.index ["DateUpdated"], name: "hmis_2020_inventories-0TGU"
     t.index ["ExportID"], name: "hmis_2020_inventories-whCo"
@@ -3300,6 +3337,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["ExportID"], name: "hmis_2020_organizations-VQWo"
     t.index ["OrganizationID", "data_source_id"], name: "hmis_2020_organizations-MfSb"
     t.index ["OrganizationID"], name: "hmis_2020_organizations-Prts"
@@ -3332,6 +3370,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "hmis_2020_project_cocs-Tmf3"
     t.index ["DateUpdated"], name: "hmis_2020_project_cocs-OI4Q"
     t.index ["ExportID"], name: "hmis_2020_project_cocs-GTs4"
@@ -3371,6 +3410,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "hmis_2020_projects-ctk2"
     t.index ["DateUpdated"], name: "hmis_2020_projects-zcbu"
     t.index ["ExportID"], name: "hmis_2020_projects-fqB3"
@@ -3406,6 +3446,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["DateCreated"], name: "hmis_2020_services-eNab"
     t.index ["DateDeleted"], name: "hmis_2020_services-WGtP"
     t.index ["DateProvided"], name: "hmis_2020_services-8nZj"
@@ -3445,6 +3486,7 @@ ActiveRecord::Schema.define(version: 2021_03_12_200044) do
     t.datetime "dirty_at"
     t.datetime "clean_at"
     t.boolean "should_import", default: true
+    t.binary "source_sha256"
     t.index ["ExportID"], name: "hmis_2020_users-Ls1u"
     t.index ["UserID", "data_source_id"], name: "hmis_2020_users-DmeI"
     t.index ["UserID"], name: "hmis_2020_users-74tq"

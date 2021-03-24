@@ -371,6 +371,8 @@ module HmisCsvTwentyTwenty::Importer
     def add_new_data
       importable_files.each do |file_name, klass|
         destination_class = klass.reflect_on_association(:destination_record).klass
+        upsert = !destination_class.name.in?(un_updateable_warehouse_classes)
+
         # logger.debug "Adding #{destination_class.table_name} #{hash_as_log_str log_ids}"
         batch = []
         existing_keys = klass.existing_data(
@@ -390,8 +392,7 @@ module HmisCsvTwentyTwenty::Importer
               # also NOTE: if aggregation is used, the count of added Enrollments and Exits will reflect the
               # entire history of enrollments for aggregated projects because some of the existing enrollments fall
               # outside of the range, but are necessary to calculate the correctly aggregated set
-              upsert = ! destination_class.name.in?(un_updateable_warehouse_classes)
-              columns = batch.first.attributes.keys - ['id']
+              columns = batch.first.attributes.keys - ['id', 'source_sha256']
               process_batch!(destination_class, batch, file_name, columns: columns, type: 'added', upsert: upsert)
               batch = []
             end
@@ -402,8 +403,7 @@ module HmisCsvTwentyTwenty::Importer
           # entire history of enrollments for aggregated projects because some of the existing enrollments fall
           # outside of the range, but are necessary to calculate the correctly aggregated set
           if batch.present?
-            upsert = ! destination_class.name.in?(un_updateable_warehouse_classes)
-            columns = batch.first.attributes.keys - ['id']
+            columns = batch.first.attributes.keys - ['id', 'source_sha256']
             process_batch!(destination_class, batch, file_name, columns: columns, type: 'added', upsert: upsert) # ensure we get the last batch
           end
         end
@@ -622,9 +622,10 @@ module HmisCsvTwentyTwenty::Importer
     end
 
     private def process_batch!(klass, batch, file_name, type:, upsert:, columns: klass.upsert_column_names(version: '2020')) # rubocop:disable Metrics/ParameterLists
-      klass.logger.debug { "process_batch! #{klass} #{upsert ? 'upsert' : 'import'} #{batch.size} records" }
+      operation_desc = upsert ? 'upsert' : 'insert'
+      klass.logger.info { "process_batch! #{klass} #{operation_desc} #{batch.size} records to process" }
       klass.logger.silence(Logger::WARN) do
-        if upsert
+        result = if upsert
           klass.import(batch, on_duplicate_key_update:
             {
               conflict_target: klass.conflict_target,
@@ -633,6 +634,7 @@ module HmisCsvTwentyTwenty::Importer
         else
           klass.import(batch, validate: use_ar_model_validations)
         end
+        klass.logger.info { "process_batch! only #{result.ids.size} ids returned from #{operation_desc}" } if batch.size != result.ids.size
         note_processed(file_name, batch.count, type)
       end
       return nil

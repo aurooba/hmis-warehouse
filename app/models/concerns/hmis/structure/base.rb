@@ -6,8 +6,11 @@
 
 module HMIS::Structure::Base
   extend ActiveSupport::Concern
+  HMIS_STRUCTURE_KEYS = [:type, :limit, :null].freeze
 
   included do
+    attr_readonly :source_sha256
+
     scope :delete_pending, -> do
       where.not(pending_date_deleted: nil)
     end
@@ -143,6 +146,29 @@ module HMIS::Structure::Base
       hmis_configuration(version: version).transform_values { |v| v.select { |k| k.in?(HMIS_STRUCTURE_KEYS) } }
     end
 
-    HMIS_STRUCTURE_KEYS = [:type, :limit, :null].freeze
+    # generate a pgSQL expressions for calculating a digest(..., 'sha256') bytea
+    # of the content. ExportID is explicitly excluded.
+    # Supports :string, :integer, :decimal, :date, :datetime columns only
+    def hmis_hash_expression_pgsql(version:)
+      immutable_casts = []
+      hmis_structure(version: version).keys.each do |col|
+        next if col == :ExportID
+
+        type = columns_hash[col.to_s].type
+        quoted_column_name = connection.quote_column_name(col)
+
+        case type
+        when :string, :integer, :decimal
+          immutable_casts << "coalesce(#{quoted_column_name}::text,'')"
+        when :date, :datetime
+          immutable_casts << "coalesce(extract(epoch from #{quoted_column_name})::text, '')"
+        else
+          raise "Unsupported type: #{qouted_table_name}.#{quoted_column_name} #{type} is not supported yet."
+        end
+      end
+      return nil unless immutable_casts.any?
+
+      "digest(#{immutable_casts.join('||')}, 'sha256')"
+    end
   end
 end

@@ -24,43 +24,14 @@ class AddGeneratedSourceHash < ActiveRecord::Migration[5.2]
 
   def down
     MODELS.each do |m|
-      m.hmis_structure(version: '2020').keys.each do |col|
-        next if col == :ExportID
-
-        puts [m.table_name, col].join('.')
-        remove_column m.table_name, 'source_sha256' if column_exists?(m.table_name, 'source_sha256')
-      end
+      remove_column m.table_name, 'source_sha256' if column_exists?(m.table_name, 'source_sha256')
     end
   end
 
   def up
-
     MODELS.each do |m|
-      immutable_casts = []
-      puts [m.table_name].join('.')
-
-      m.hmis_structure(version: '2020').keys.each do |col|
-        next if col == :ExportID
-
-        puts [m.table_name, col].join('.')
-        type = m.columns_hash[col.to_s].type
-        case m.columns_hash[col.to_s].type
-        when :string, :integer, :decimal
-          immutable_casts << "coalesce(#{quote_column_name col}::text,'')"
-        # when :integer
-        #  immutable_casts << "#{quote_column_name col}::text"
-        when :date, :datetime
-          immutable_casts << "coalesce(extract(epoch from #{quote_column_name col})::text, '')"
-        else
-          debugger
-          puts "Skipping #{m.table_name} #{col} type: #{type}"
-        end
-      end
-
-      digest_sql = "digest(#{immutable_casts.join('||')}, 'sha256')"
-      add_column m.table_name, 'source_sha256', 'bytea' # GENERATED ALWAYS AS (#{digest_sql}) STORED"
+      digest_sql = m.hmis_hash_expression_pgsql(version: '2020')
+      add_column m.table_name, 'source_sha256', "bytea GENERATED ALWAYS AS (#{digest_sql}) STORED"
     end
-
-
   end
 end

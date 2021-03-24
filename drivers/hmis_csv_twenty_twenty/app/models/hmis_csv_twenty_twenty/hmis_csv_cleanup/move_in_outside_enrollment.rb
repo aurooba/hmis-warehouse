@@ -20,7 +20,7 @@ module HmisCsvTwentyTwenty::HmisCsvCleanup
       invalid_move_in_dates.find_each do |enrollment|
         enrollment.MoveInDate = nil
         enrollment.set_source_hash
-        enrollment_batch << enrollment.attributes.except('id', 'source_sha256')
+        enrollment_batch << enrollment
       end
 
       enrollment_source.import(

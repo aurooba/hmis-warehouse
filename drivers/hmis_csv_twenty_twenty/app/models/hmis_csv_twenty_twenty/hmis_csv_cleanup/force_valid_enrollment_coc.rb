@@ -23,7 +23,7 @@ module HmisCsvTwentyTwenty::HmisCsvCleanup
         e_coc.CoCCode = nil if e_coc.CoCCode.present? && ! ::HUD.valid_coc?(e_coc.CoCCode)
 
         e_coc.set_source_hash
-        enrollment_coc_batch << e_coc.attributes.except('source_sha256')
+        enrollment_coc_batch << e_coc
       end
 
       enrollment_coc_source.import(

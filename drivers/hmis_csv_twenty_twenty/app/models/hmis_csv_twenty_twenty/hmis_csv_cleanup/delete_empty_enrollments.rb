@@ -16,7 +16,7 @@ module HmisCsvTwentyTwenty::HmisCsvCleanup
       es_with_no_service.find_each do |enrollment|
         enrollment.DateDeleted = Date.current
         enrollment.set_source_hash
-        enrollment_batch << enrollment.attributes.except('id', 'source_sha256')
+        enrollment_batch << enrollment
       end
 
       so_with_no_cls = enrollment_scope.
@@ -26,7 +26,7 @@ module HmisCsvTwentyTwenty::HmisCsvCleanup
       so_with_no_cls.find_each do |enrollment|
         enrollment.DateDeleted = Date.current
         enrollment.set_source_hash
-        enrollment_batch << enrollment.attributes.except('id', 'source_sha256')
+        enrollment_batch << enrollment
       end
 
       enrollment_source.import(

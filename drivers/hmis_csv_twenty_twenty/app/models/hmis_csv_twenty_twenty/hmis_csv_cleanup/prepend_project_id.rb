@@ -12,7 +12,7 @@ module HmisCsvTwentyTwenty::HmisCsvCleanup
       project_scope.find_each do |project|
         project.ProjectName = "(#{project.ProjectID}) #{project.ProjectName}"
         project.set_source_hash
-        project_batch << project
+        project_batch << project.attributes.except('id', 'source_sha256')
       end
 
       project_source.import(

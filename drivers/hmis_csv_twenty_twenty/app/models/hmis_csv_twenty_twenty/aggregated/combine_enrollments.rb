@@ -90,7 +90,7 @@ module HmisCsvTwentyTwenty::Aggregated
       )
       new_enrollment.set_source_hash
 
-      new_enrollment
+      new_enrollment.attributes.except('source_sha256')
     end
 
     def new_exit_for_enrollment(source, enrollment)
@@ -107,7 +107,7 @@ module HmisCsvTwentyTwenty::Aggregated
       )
       new_exit.set_source_hash
 
-      new_exit
+      new_exit.attributes.except('source_sha256')
     end
 
     def mark_incoming_data_as_do_not_import

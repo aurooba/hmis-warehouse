@@ -16,6 +16,14 @@ GIT
       rspec
 
 GIT
+  remote: https://github.com/greenriver/sharepoint-ruby.git
+  revision: 3ca628c74562f57a17013f9a4b099370cc4ce9ef
+  branch: curb-update
+  specs:
+    sharepoint-ruby (0.1.2)
+      curb (~> 0.8, <= 0.9.11)
+
+GIT
   remote: https://github.com/rails-sqlserver/activerecord-sqlserver-adapter.git
   revision: 777aa53445c34e78d7248d08ca119f00d841bc88
   branch: 5-2-stable
@@ -946,6 +954,7 @@ DEPENDENCIES
   scenic
   sdoc
   seven_zip_ruby
+  sharepoint-ruby!
   shoulda
   simple_form
   slack-notifier

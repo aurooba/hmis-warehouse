@@ -123,7 +123,7 @@ gem 'gmail', require: false
 # gem 'qaaws', require: false, git: 'https://github.com/greenriver/eis-ruby-qaaws.git', branch: 'master'
 
 gem 'stupidedi' #, require: false #, git: 'https://github.com/greenriver/stupidedi.git', branch: '820'
-
+gem 'sharepoint-ruby', require: false, git: 'https://github.com/greenriver/sharepoint-ruby.git', branch: 'curb-update'
 gem 'redcarpet'
 
 # For exporting

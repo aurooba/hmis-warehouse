@@ -36,7 +36,7 @@ class RollOut
 
   DEFAULT_SOFT_DJ_RAM_MB = ->(target_group_name) { target_group_name.match?(/staging/) ? 1500 : 4000 }
 
-  DEFAULT_SOFT_RAM_MB = 1800
+  DEFAULT_SOFT_RAM_MB = 6800
 
   RAM_OVERCOMMIT_MULTIPLIER = ->(target_group_name) { target_group_name.match?(/staging/) ? 5 : 3 }
 

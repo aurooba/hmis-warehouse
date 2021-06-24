@@ -223,17 +223,17 @@ task :echo_options do
 end
 after 'git:wrapper', :echo_options
 
-task :trigger_job_restarts do
-  on roles(:app) do
-    within release_path do
-      # Major ruby version upgrades might need a full cache clear:
-      # execute :bundle, :exec, :rails, :runner, '-e', fetch(:rails_env), "\"Rails.cache.clear\""
-
-      execute :bundle, :exec, :rails, :runner, '-e', fetch(:rails_env), "\"Rails.cache.write('deploy-dir', Delayed::Worker::Deployment.deployed_to)\""
-    end
-  end
-end
-after 'deploy:symlink:release', :trigger_job_restarts
+# task :trigger_job_restarts do
+#   on roles(:app) do
+#     within release_path do
+#       # Major ruby version upgrades might need a full cache clear:
+#       # execute :bundle, :exec, :rails, :runner, '-e', fetch(:rails_env), "\"Rails.cache.clear\""
+#
+#       execute :bundle, :exec, :rails, :runner, '-e', fetch(:rails_env), "\"Rails.cache.write('deploy-dir', Delayed::Worker::Deployment.deployed_to)\""
+#     end
+#   end
+# end
+# after 'deploy:symlink:release', :trigger_job_restarts
 
 
 task :clean_bootsnap_cache do

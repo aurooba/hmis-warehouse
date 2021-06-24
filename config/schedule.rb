@@ -54,10 +54,8 @@ every 5.minutes do
   rake 'reporting:frequent'
 end
 
-if ENV['ECS'] == 'true'
-  every 2.minutes do
-    rake 'jobs:arbitrate_workoff'
-  end
+every 2.minutes do
+  rake 'jobs:arbitrate_workoff'
 end
 
 every 4.hours do

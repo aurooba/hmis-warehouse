@@ -32,7 +32,7 @@ module HudReports
           column_names.each do |column_name|
             answer = @report.answer(question: @table, cell: "#{column_name}#{row_name}").summary || ''
             answer = '0.0000' if answer == 'NaN'
-            row << answer
+            row << answer.strip
           end
           table << row
         end

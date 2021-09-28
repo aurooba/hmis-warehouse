@@ -19,7 +19,7 @@ module HmisCsvTwentyTwentyTwo::Exporter
     def export!
       headers = self.class.hud_csv_headers(version: '2022')
       export_path = File.join(@path, self.class.hud_csv_file_name)
-      CSV.open(export_path, 'wb') do |csv|
+      CSV.open(export_path, 'wb', row_sep: "\r\n") do |csv|
         csv << headers
         csv << attributes.slice(*headers.map(&:to_s)).values
       end

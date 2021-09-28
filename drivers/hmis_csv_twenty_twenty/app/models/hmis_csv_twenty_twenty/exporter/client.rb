@@ -81,7 +81,7 @@ module HmisCsvTwentyTwenty::Exporter
         end
       end
 
-      CSV.open(export_path, 'wb', { force_quotes: true }) do |csv|
+      CSV.open(export_path, 'wb', force_quotes: true, row_sep: "\r\n") do |csv|
         break unless clean_clients.any?
 
         csv << clean_clients.first.headers

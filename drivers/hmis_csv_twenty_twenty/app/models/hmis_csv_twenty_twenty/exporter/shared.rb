@@ -30,7 +30,7 @@ module HmisCsvTwentyTwenty::Exporter::Shared
     headers = self.class.hud_csv_headers(version: '2020')
     export_path = File.join(path, self.class.hud_csv_file_name)
     export_id = export.export_id
-    CSV.open(export_path, 'wb', force_quotes: true) do |csv|
+    CSV.open(export_path, 'wb', force_quotes: true, row_sep: "\r\n") do |csv|
       csv << clean_headers(headers)
       export_scope = export_scope.with_deleted if paranoid? && export.include_deleted
 

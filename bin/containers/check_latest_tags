@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+require_relative '../../config/deploy/docker/lib/command_args'
+require_relative '../../config/deploy/docker/lib/latest_tag_checker'
+
+args = CommandArgs.new
+
+args.deployments.each do |deployment|
+  puts "Checking latest tags for #{deployment[:target_group_name]}..."
+  LatestTagChecker.new(**deployment).run!
+  puts "-------------------------------------------------------------"
+end

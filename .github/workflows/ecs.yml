@@ -65,7 +65,7 @@ jobs:
         then
           echo 'Deleting pre-cache image...'
           export RUBY_VERSION=`cat .ruby-version`
-          aws ecr batch-delete-image --repository-name ${ECR_REPOSITORY} --image-ids imageTag="${RUBY_VERSION}--pre-cache"
+          aws ecr batch-delete-image --repository-name ${ECR_REPOSITORY} --image-ids imageTag="${RUBY_VERSION}-3--pre-cache"
         fi
 
     - name: Build, tag, and push image to Amazon ECR
@@ -88,13 +88,13 @@ jobs:
           # Pull the image that speeds up builds. Build it if we have to.
           # Delete from ECR to re-cache
           echo Pulling or building pre-cache image
-          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:${RUBY_VERSION}--pre-cache || docker build --file=$DOCKER_ASSETS_PATH/Dockerfile.${ECR_REPOSITORY}.pre-cache -t $ECR_REGISTRY/$ECR_REPOSITORY:${RUBY_VERSION}--pre-cache .
+          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:${RUBY_VERSION}-3--pre-cache || docker build --file=$DOCKER_ASSETS_PATH/Dockerfile.${ECR_REPOSITORY}.pre-cache -t $ECR_REGISTRY/$ECR_REPOSITORY:${RUBY_VERSION}-3--pre-cache .
 
           echo Tagging pre-cache so local dockerfiles will work
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${RUBY_VERSION}--pre-cache ${ECR_REPOSITORY}:latest--pre-cache
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${RUBY_VERSION}-3--pre-cache ${ECR_REPOSITORY}:latest--pre-cache
 
           echo Pushing pre-cache
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${RUBY_VERSION}--pre-cache
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${RUBY_VERSION}-3--pre-cache
         fi
 
         # the pre-cache image is like a stale version of the code. This builds the most recent things

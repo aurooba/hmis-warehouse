@@ -105,7 +105,9 @@ $table-border-color-secondary: #F0F0F0;
 table.table-fixed {
   position: relative;
 }
+
 .table-fixed th {
+  z-index: 1000;
   position: sticky;
   top: 0;
   background-color: $white;

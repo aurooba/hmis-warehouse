@@ -123,7 +123,11 @@ module WarehouseReports::Cas
         index_by(&:first). # order clause ensures most-recent response when indexed
         transform_values do |row|
           v = row.last
-          v = if v.zero?
+          v = if v.to_s == 'chronic_answer_yes'
+            'Yes'
+          elsif v.to_s == 'chronic_answer_no'
+            'No'
+          elsif v.zero?
             'No'
           elsif v.positive?
             'Yes'

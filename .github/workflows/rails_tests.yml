@@ -146,6 +146,8 @@ jobs:
 
       # This will check for ES6 code and bomb if it hits any
       - uses: ali-kamalizade/es-check-action@1.0.2
+        run: |
+          mkdir -p /github/home/.npm/_npx
         with:
           directory: 'public/assets'
           ecmaVersion: 'es5'

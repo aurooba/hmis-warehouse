@@ -9,7 +9,7 @@
   - section['sub_sections'].each do |title, dates|
     .jHomelessBreakdownRow{data: { chronics: chronic_dates.to_json}}
       - total = dates[active_date]['total']
-      - chronic_percent = chronic_dates[active_date][title]
+      - chronic_percent = chronic_dates[active_date].try(:[], title) || 0
       .w-100.mb-4.d-flex
         .w-50.d-flex
           - chart_class = "household_type_#{section_header.downcase.parameterize.underscore}_#{title.downcase.parameterize.underscore}"

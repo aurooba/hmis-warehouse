@@ -207,6 +207,11 @@ module Health
       @sdh_risk_score[patient.medicaid_id] || 'Unknown'
     end
 
+    private def disabled_client(client_id)
+      @disabled_client ||= Set.new(GrdaWarehouse::Hud::Client.disabled_client_scope.where(id: patient_scope.pluck(:client_id)).pluck(:id))
+      @disabled_client.include?(client_id)
+    end
+
     def row patient
       {
         'ID_MEDICAID' => patient.medicaid_id,
@@ -228,8 +233,8 @@ module Health
         'PCTP_RENEWAL_DATE' => care_plan_renewal_date(patient.id),
         'QA_FACE_TO_FACE' => most_recent_face_to_face_qa_date(patient.id),
         'QA_LAST' => most_recent_qa_from_case_note(patient.id),
-        'LITERALLY HOMELESS' => patient.client.literally_homeless_last_three_years,
-        'DISABLED' => patient.client.currently_disabled? ? 'Y' : 'N',
+        'LITERALLY HOMELESS' => patient.client.processed_service_history&.literally_homeless_last_three_years,
+        'DISABLED' => disabled_client(patient.client_id) ? 'Y' : 'N',
         'HOUSING STATUS' => most_recent_housing_status(patient.id),
         'CAREPLAN SIGNED WITHIN 122 DAYS' => with_careplans_in_122_days?(patient, as: :text),
         'SDH RISK SCORE' => sdh_risk_score(patient),

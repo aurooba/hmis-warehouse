@@ -98,6 +98,7 @@ module Admin
         :cas_calculator,
         :service_register_visible,
         :enable_youth_unstably_housed,
+        :majority_sheltered_calculation,
         client_details: [],
       )
     end

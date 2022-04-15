@@ -130,6 +130,13 @@ module GrdaWarehouse
       }
     end
 
+    def self.available_majority_sheltered_calculations
+      {
+        'Current Living Situation' => 'current_living_situation',
+        'Days sheltered' => 'days_sheltered',
+      }
+    end
+
     def self.client_search_available?
       get(:pii_encryption_type).to_sym.in?([:none])
     end

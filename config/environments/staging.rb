@@ -82,7 +82,7 @@ Rails.application.configure do
   config.active_support.deprecation = :notify
 
   # Using a JSON formatter to support graphana
-  config.log_formatter = ::Lograge::Formatters::Json.new
+  config.lograge.log_formatter = ::Lograge::Formatters::Json.new
 
   # Use a different logger for distributed setups.
   # require 'syslog/logger'

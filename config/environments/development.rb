@@ -104,6 +104,7 @@ Rails.application.configure do
 
   # make the development log noisy so you can see request parameters, views rendered, etc.
   config.lograge.enabled = false
+  # config.lograge.log_formatter = ::Lograge::Formatters::Json.new
 
   # do gzip compressing in dev mode to simulate nginx config in production
   config.middleware.insert_after ActionDispatch::Static, Rack::Deflater

@@ -103,8 +103,11 @@ Rails.application.configure do
   config.sandbox_email_mode = true
 
   # make the development log noisy so you can see request parameters, views rendered, etc.
-  config.lograge.enabled = false
-  # config.lograge.log_formatter = ::Lograge::Formatters::Json.new
+  config.lograge.enabled = true
+  config.lograge.formatter = ::Lograge::Formatters::Json.new
+  logger           = ActiveSupport::Logger.new(STDOUT)
+  # logger.formatter = config.lograge.formatter
+  config.logger    = ActiveSupport::TaggedLogging.new(logger)
 
   # do gzip compressing in dev mode to simulate nginx config in production
   config.middleware.insert_after ActionDispatch::Static, Rack::Deflater

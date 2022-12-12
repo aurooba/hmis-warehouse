@@ -1,6 +1,17 @@
 {
   "item": [
     {
+      "type": "DATE",
+      "link_id": "information-date",
+      "field_name": "informationDate",
+      "hidden": true,
+      "initial": [
+        {
+          "value_local_constant": "$entryDate"
+        }
+      ]
+    },
+    {
       "type": "GROUP",
       "link_id": "location",
       "text": "Client Location",

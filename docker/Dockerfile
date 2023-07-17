@@ -43,6 +43,7 @@ RUN apk add --no-cache \
   python3 py3-pip \
   && git config --global --add safe.directory /app
 
+RUN pip3 install wheel
 RUN pip3 install awscliv2 awscli
 
 RUN mkdir /app

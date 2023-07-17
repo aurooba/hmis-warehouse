@@ -2,7 +2,7 @@ FROM open-path-warehouse:latest--base
 
 USER root
 RUN apk add py3-pip
-RUN pip3 install "Cython<3.0" "pyyaml==6.0.0" --no-build-isolation
-RUN pip3 install wheel
-RUN pip3 install awscli
+# RUN pip3 install "Cython<3.0" "pyyaml==6.0.0" --no-build-isolation
+# RUN pip3 install wheel
+RUN pip3 install awscli --no-build-isolation
 USER app

@@ -1,0 +1,137 @@
+{
+  "link_id": "enrollment-details",
+  "text": "Enrollment Details",
+  "type": "GROUP",
+  "item": [
+    {
+      "type": "DATE",
+      "link_id": "entry-date",
+      "text": "Entry Date",
+      "mapping": {
+        "record_type": "ENROLLMENT",
+        "field_name": "entryDate"
+      },
+      "required": true,
+      "initial": [
+        {
+          "initial_behavior": "OVERWRITE",
+          "value_local_constant": "$today"
+        }
+      ],
+      "bounds": [
+        {
+          "id": "max-entry-date",
+          "type": "MAX",
+          "value_local_constant": "$today"
+        }
+      ]
+    },
+    {
+      "type": "CHOICE",
+      "link_id": "relationship-to-hoh",
+      "text": "Relationship to HoH",
+      "mapping": {
+        "record_type": "ENROLLMENT",
+        "field_name": "relationshipToHoH"
+      },
+      "pick_list_reference": "RelationshipToHoH",
+      "required": false,
+      "autofill_values": [
+        {
+          "value_code": "SELF_HEAD_OF_HOUSEHOLD",
+          "autofill_behavior": "ALL",
+          "_comment": "set to HoH if this is a new enrollment in a new household",
+          "autofill_when": [
+            {
+              "local_constant": "$householdId",
+              "operator": "EXISTS",
+              "answer_boolean": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "CHOICE",
+      "link_id": "unit",
+      "text": "Select Unit",
+      "required": true,
+      "mapping": {
+        "record_type": "ENROLLMENT",
+        "field_name": "currentUnit"
+      },
+      "pick_list_reference": "AVAILABLE_UNITS_FOR_ENROLLMENT",
+      "rule": {
+        "operator": "ANY",
+        "_comment": "All projects except CE. May want to remove ES too, depending on whether we do unit assignment when recording bed nights or at enrollment.",
+        "parts": [
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 1
+          },
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 2
+          },
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 3
+          },
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 4
+          },
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 6
+          },
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 8
+          },
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 9
+          },
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 7
+          },
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 10
+          },
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 11
+          },
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 12
+          },
+          {
+            "variable": "projectType",
+            "operator": "EQUAL",
+            "value": 13
+          }
+        ]
+      }
+    }
+  ]
+}

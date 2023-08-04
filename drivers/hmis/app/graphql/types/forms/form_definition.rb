@@ -18,6 +18,7 @@ module Types
     # we might need to apply filter. Probably the filtering should get moved to it's own
     # class down the road
     def definition
+      Rails.logger.info(">>>  #{object.definition}")
       # the col is jsonb... somehow we get a string here?
       eval_items([object.definition])[0]
     end

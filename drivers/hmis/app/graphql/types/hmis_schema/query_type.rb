@@ -175,6 +175,7 @@ module Types
       project = Hmis::Hud::Enrollment.find_by(id: enrollment_id)&.project if enrollment_id.present?
 
       record = Hmis::Form::Definition.find_definition_for_role(role, project: project)
+      Rails.logger.info(">>> get_form_definition #{project&.project_name}")
       record.filter_context = { project: project }
       record
     end
